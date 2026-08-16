@@ -1,7 +1,0 @@
-# One domain per line. Lines starting with # are ignored.
-# Any inbox email whose sender address is @<domain> will be trashed.
-#
-# Example:
-# lensa.com
-# indeed.com
-# some-newsletter.example.com

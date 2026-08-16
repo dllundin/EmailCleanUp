@@ -30,8 +30,6 @@ EmailCleanUp/
 
 ├── domains.txt                  \# Your domain list (gitignored, edit this)
 
-├── domains.example.txt          \# Template for domains.txt
-
 ├── requirements.txt             \# Python dependencies
 
 ├── setup.bat                    \# Automated setup script
@@ -44,9 +42,11 @@ EmailCleanUp/
 
 ├── Output/                      \# Log files directory
 
-│   ├── lensa.com.txt            \# Rolling log for lensa.com (one file per domain)
+│   └── 2026-08-16/              \# One subfolder per day, created on first run that day
 
-│   └── indeed.com.txt           \# Rolling log for indeed.com
+│       ├── lensa.com.txt        \# Rolling log for lensa.com (one file per domain)
+
+│       └── indeed.com.txt       \# Rolling log for indeed.com
 
 ├── credentials.json             \# Google API credentials
 
@@ -88,10 +88,12 @@ pip install \-r requirements.txt
 
 ### 4\. List the Domains to Clean Up
 
-Copy `domains.example.txt` to `domains.txt` and add one domain per line:
+Create `domains.txt` in the project directory and add one domain per line (`#` for comments):
 
 lensa.com
 indeed.com
+
+`setup.bat` will create an empty `domains.txt` for you if it doesn't exist yet.
 
 ### 5\. Test the Script
 
@@ -103,7 +105,7 @@ run\_cleanup.bat --dry-run
 
 python gmail\_domain\_cleanup.py --dry-run
 
-Review `Output/<domain>.txt` for each domain, then re-run without `--dry-run` to actually trash the matching emails.
+Review `Output/<YYYY-MM-DD>/<domain>.txt` for each domain, then re-run without `--dry-run` to actually trash the matching emails.
 
 On first run:
 
@@ -153,7 +155,7 @@ Add to crontab to run every 2 hours:
 
 ## Logs
 
-Each domain gets its own rolling log file at `Output/<domain>.txt`. Every run appends a new timestamped entry, so history for that domain accumulates over time:
+Each day's first run creates `Output/<YYYY-MM-DD>/`. Within that folder, each domain gets its own rolling log file at `Output/<YYYY-MM-DD>/<domain>.txt`. Every run appends a new timestamped entry, so history for that domain accumulates within the day:
 
 \================================================================================
 
@@ -187,7 +189,7 @@ Edit `domains.txt` to add or remove domains (one per line, `#` for comments) —
 
 ### "Domains file not found" or "No domains found"
 
-- Copy `domains.example.txt` to `domains.txt`  
+- Create `domains.txt` in the project directory  
 - Add at least one domain, one per line
 
 ### "credentials.json not found"
@@ -227,10 +229,10 @@ Edit `domains.txt` to add or remove domains (one per line, `#` for comments) —
 | :---- | :---- |
 | `gmail_domain_cleanup.py` | Main cleanup script |
 | `domains.txt` | Your list of domains to clean up (gitignored) |
-| `domains.example.txt` | Template for domains.txt |
 | `requirements.txt` | Python package dependencies |
 | `setup.bat` | Windows setup automation |
 | `run_cleanup.bat` | Quick run script |
+| `test_run.bat` | Like run_cleanup.bat, but pauses after so you can read the output |
 | `README.md` | Documentation (this file) |
 | `.gitignore` | Git ignore rules |
 
@@ -244,7 +246,7 @@ For issues or questions:
 
 1. Check the Troubleshooting section above  
 2. Verify setup steps were followed correctly  
-3. Check `Output/<domain>.txt` for error messages
+3. Check `Output/<YYYY-MM-DD>/<domain>.txt` for error messages
 
 ## Future Enhancements
 

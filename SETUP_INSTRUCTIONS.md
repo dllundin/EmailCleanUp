@@ -4,7 +4,7 @@
 ```
 C:\_AI\EmailCleanUp\
 ├── gmail_domain_cleanup.py
-├── domains.txt (copy from domains.example.txt, edit with your domains)
+├── domains.txt (create this, edit with your domains)
 ├── setup.bat
 ├── run_cleanup.bat
 ├── credentials.json (from Google Cloud Console)
@@ -34,8 +34,9 @@ pip install -r requirements.txt
 
 ## Step 3: Set Your Domain List
 
-Copy `domains.example.txt` to `domains.txt` and add one domain per line
+Create `domains.txt` in the project directory and add one domain per line
 (e.g. `lensa.com`). Any inbox email sent from `@<domain>` will be trashed.
+`setup.bat` creates an empty `domains.txt` for you if it's missing.
 
 ## Step 4: Test the Script
 
@@ -82,7 +83,7 @@ single domain's history over time and confirm the scheduled job is actually runn
 - Place in `C:\_AI\EmailCleanUp\`
 
 **"Domains file not found" or "No domains found"**
-- Copy `domains.example.txt` to `domains.txt`
+- Create `domains.txt` in the project directory
 - Add at least one domain, one per line
 
 **"Permission denied when accessing logs"**
