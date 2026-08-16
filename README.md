@@ -1,20 +1,23 @@
 # Email CleanUp
 
-Automated email cleanup tool that searches Gmail for emails from lensa.com and moves them to trash on a scheduled basis.
+Automated email cleanup tool that searches Gmail for emails from a configurable list of domains and moves them to trash on a scheduled basis.
 
 ## Overview
 
 This project provides a Python script that:
 
-- Searches Gmail for emails from `lensa.com` (job alert emails)  
-- Automatically moves matching emails to trash  
-- Logs all deleted emails with timestamps and details  
+- Reads a list of domains from `domains.txt`
+- Searches your Gmail inbox for emails sent from any of those domains
+- Automatically moves matching emails to trash
+- Logs every run to a rolling, timestamped text file per domain
+- Supports `--dry-run` to preview what would be deleted first
+- Supports `--max-per-domain N` to cap deletions per domain per run (0 or omitted = delete all matches)
 - Can be scheduled to run automatically every 2 hours (or any interval)
 
 ## Features
 
-- **Automated cleanup** \- Remove unwanted job alert emails automatically  
-- **Detailed logging** \- Track every deleted email with date, sender, and subject  
+- **Automated cleanup** \- Remove unwanted emails automatically  
+- **Per-domain logging** \- Each domain gets its own rolling log file, timestamped on every run  
 - **Easy scheduling** \- Windows Task Scheduler integration ready  
 - **Gmail API** \- Uses official Google Gmail API for reliable access  
 - **No data deletion** \- Emails go to Trash, not permanently deleted (can be recovered)
@@ -23,7 +26,11 @@ This project provides a Python script that:
 
 EmailCleanUp/
 
-├── gmail\_lensa\_cleanup.py      \# Main cleanup script
+├── gmail\_domain\_cleanup.py      \# Main cleanup script
+
+├── domains.txt                  \# Your domain list (gitignored, edit this)
+
+├── domains.example.txt          \# Template for domains.txt
 
 ├── requirements.txt             \# Python dependencies
 
@@ -35,11 +42,15 @@ EmailCleanUp/
 
 ├── README.md                    \# This file
 
-├── logs/                        \# Log files directory
+├── Output/                      \# Log files directory
 
-│   └── cleanup\_log.txt          \# Cleanup history
+│   ├── lensa.com.txt            \# Rolling log for lensa.com (one file per domain)
 
-└── credentials.json             \# Google API credentials (generated)
+│   └── indeed.com.txt           \# Rolling log for indeed.com
+
+├── credentials.json             \# Google API credentials
+
+└── gmail\_token.json             \# Cached OAuth token (generated)
 
 ## Prerequisites
 
@@ -75,55 +86,78 @@ pip install \-r requirements.txt
 5. Download the credentials file as JSON  
 6. Save it as `credentials.json` in the project directory
 
-### 4\. Test the Script
+### 4\. List the Domains to Clean Up
+
+Copy `domains.example.txt` to `domains.txt` and add one domain per line:
+
+lensa.com
+indeed.com
+
+### 5\. Test the Script
 
 **Option A: Using run\_cleanup.bat (Windows)**
 
-run\_cleanup.bat
+run\_cleanup.bat --dry-run
 
 **Option B: Manual run**
 
-python gmail\_lensa\_cleanup.py
+python gmail\_domain\_cleanup.py --dry-run
+
+Review `Output/<domain>.txt` for each domain, then re-run without `--dry-run` to actually trash the matching emails.
 
 On first run:
 
 - A browser window will open asking for Gmail permission  
 - Click **Allow** to authorize the app  
-- Authorization token is saved locally for future runs
+- Authorization token is saved locally (`gmail_token.json`) for future runs
 
 ## Usage
 
 ### Run Manually
 
-python gmail\_lensa\_cleanup.py
+python gmail\_domain\_cleanup.py
+
+### Preview Without Deleting
+
+python gmail\_domain\_cleanup.py --dry-run
+
+### Use a Different Domains File
+
+python gmail\_domain\_cleanup.py --domains-file other_domains.txt
+
+### Limit How Many Emails Are Deleted Per Domain
+
+python gmail\_domain\_cleanup.py --max-per-domain 25
+
+Omit this flag, or pass `0`, to delete all matching emails for every domain.
 
 ### Schedule with Windows Task Scheduler
 
 1. Open **Task Scheduler**  
 2. Click **Create Basic Task**  
 3. Configure:  
-   - **Name:** Gmail Lensa Cleanup  
-   - **Description:** Automatically removes lensa.com job alert emails  
+   - **Name:** Gmail Domain Cleanup  
+   - **Description:** Automatically removes emails from domains listed in domains.txt  
    - **Trigger:** Set to repeat every 2 hours (or your preferred interval)  
 4. **Action:**  
    - Program: `python.exe` (or full path to Python)  
-   - Arguments: `C:\AI\EmailCleanUp\gmail_lensa_cleanup.py`  
-   - Start in: `C:\AI\EmailCleanUp`  
+   - Arguments: `C:\_AI\EmailCleanUp\gmail_domain_cleanup.py`  
+   - Start in: `C:\_AI\EmailCleanUp`  
 5. Click **Finish**
 
 ### Schedule with Cron (Linux/Mac)
 
 Add to crontab to run every 2 hours:
 
-0 \*/2 \* \* \* /usr/bin/python3 /path/to/gmail\_lensa\_cleanup.py
+0 \*/2 \* \* \* /usr/bin/python3 /path/to/gmail\_domain\_cleanup.py
 
 ## Logs
 
-All cleanup activity is logged to `logs/cleanup_log.txt`:
+Each domain gets its own rolling log file at `Output/<domain>.txt`. Every run appends a new timestamped entry, so history for that domain accumulates over time:
 
 \================================================================================
 
-Cleanup Run: 2026-08-16 14:26:23
+Run: 2026-08-16 14:26:23
 
 \================================================================================
 
@@ -143,19 +177,18 @@ Deleted 10 email(s) from lensa.com:
 
 ...
 
+A run with no matches for a domain still appends a timestamped "No matching emails." entry, so you can see the job ran.
+
 ## Configuration
 
-Edit `gmail_lensa_cleanup.py` to customize:
-
-\# Change the search query
-
-q='from:lensa.com'
-
-\# Change log output directory
-
-OUTPUT\_DIR \= Path(\_\_file\_\_).parent / 'logs'
+Edit `domains.txt` to add or remove domains (one per line, `#` for comments) — no code changes needed.
 
 ## Troubleshooting
+
+### "Domains file not found" or "No domains found"
+
+- Copy `domains.example.txt` to `domains.txt`  
+- Add at least one domain, one per line
 
 ### "credentials.json not found"
 
@@ -164,7 +197,7 @@ OUTPUT\_DIR \= Path(\_\_file\_\_).parent / 'logs'
 
 ### "Permission denied" when writing logs
 
-- Check that the `logs/` directory exists and is writable  
+- Check that the `Output/` directory exists and is writable  
 - If running from Task Scheduler, ensure it runs as your user account
 
 ### Script not running from Task Scheduler
@@ -192,7 +225,9 @@ OUTPUT\_DIR \= Path(\_\_file\_\_).parent / 'logs'
 
 | File | Purpose |
 | :---- | :---- |
-| `gmail_lensa_cleanup.py` | Main cleanup script |
+| `gmail_domain_cleanup.py` | Main cleanup script |
+| `domains.txt` | Your list of domains to clean up (gitignored) |
+| `domains.example.txt` | Template for domains.txt |
 | `requirements.txt` | Python package dependencies |
 | `setup.bat` | Windows setup automation |
 | `run_cleanup.bat` | Quick run script |
@@ -209,12 +244,10 @@ For issues or questions:
 
 1. Check the Troubleshooting section above  
 2. Verify setup steps were followed correctly  
-3. Check `logs/cleanup_log.txt` for error messages
+3. Check `Output/<domain>.txt` for error messages
 
 ## Future Enhancements
 
-- [ ] Configuration file for custom search queries  
-- [ ] Email templates for different senders  
 - [ ] Web dashboard for monitoring  
 - [ ] Support for other email providers  
 - [ ] Docker containerization  
