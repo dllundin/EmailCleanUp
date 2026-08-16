@@ -1,2 +1,7 @@
 client_secret_103469478087-h2ads8fbjthhl7r0ub1sln9kev4f6tsi.apps.googleusercontent.com.json
 credentials.json
+gmail_token.json
+domains.txt
+Output/
+__pycache__/
+
