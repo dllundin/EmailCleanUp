@@ -38,7 +38,7 @@ def load_domains(domains_file: Path) -> list[str]:
     if not domains_file.exists():
         sys.exit(
             f"Domains file not found: {domains_file}\n"
-            f"Copy domains.example.txt to {domains_file.name} and add your domains."
+            f"Create {domains_file.name} with one domain per line and add your domains."
         )
 
     domains = []
@@ -116,9 +116,15 @@ def get_message_summary(service, message_id: str) -> dict:
     }
 
 
+def daily_output_dir() -> Path:
+    day_dir = OUTPUT_DIR / datetime.now().strftime("%Y-%m-%d")
+    day_dir.mkdir(parents=True, exist_ok=True)
+    return day_dir
+
+
 def domain_log_file(domain: str) -> Path:
     safe_name = "".join(c if c.isalnum() or c in ".-_" else "_" for c in domain)
-    return OUTPUT_DIR / f"{safe_name}.txt"
+    return daily_output_dir() / f"{safe_name}.txt"
 
 
 def append_domain_log(domain: str, dry_run: bool, summaries: list[dict], error: str | None) -> None:
@@ -209,7 +215,7 @@ def main():
     parser.add_argument(
         "--max-per-domain",
         type=int,
-        default=0,
+        default=1,
         help="Max number of emails to delete per domain per run. "
         "Omit or use 0 to delete all matches (default: 0)",
     )
